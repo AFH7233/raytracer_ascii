@@ -1,6 +1,9 @@
 *.DS_Store
 **/.vscode
 *.obj
+*.aiignore
 **/out
+**/bin
+*.o
 /.idea/*
 /build/cmake-build-*
