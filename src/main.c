@@ -104,7 +104,15 @@ int main(void) {
   double plane_y = -2.0;
   vec4 light_pos = {.x = -5.0, .y = 5.0, .z = 5.0, .w = 1.0};
 
+
+  char *framebuffer = malloc(sizeof(char)); //temp size
+  size_t fb_size = 0;
+
   while (!exit) {
+    fb_size = H * W * 32;
+    framebuffer = realloc(framebuffer, fb_size);
+    char *ptr = framebuffer;
+
     vec4 f = normalize(sub(target, eye));
     vec4 r = normalize(cross(f, world_up));
     vec4 true_up = normalize(cross(r, f));
@@ -120,10 +128,10 @@ int main(void) {
 
       double char_aspect = 0.5;
       double aspect = ((double)W / H) * char_aspect;
-      printf("\x1b[2J");
+      ptr += sprintf(ptr, "\x1b[H");
 
       for (int y = 0; y < H; y++) {
-        printf("\x1b[%d;1H", y + 1);
+        ptr += sprintf(ptr, "\x1b[%d;1H", y + 1);
         for (int x = 0; x < W; x++) {
           double u = (((2.0 * (x + 0.5)) / W) - 1.0) * aspect;
           double v = 1.0 - ((2.0 * (y + 0.5)) / H);
@@ -153,7 +161,7 @@ int main(void) {
           }
 
           if (hit_obj == 0) {
-            printf("\x1b[0m ");
+            ptr += sprintf(ptr, "\x1b[48;2;135;206;235m ");
             continue;
           }
 
@@ -234,10 +242,26 @@ int main(void) {
           if (B > 255) B = 255;
           if (B < 0) B = 0;
 
-          printf("\x1b[38;2;%d;%d;%dm%c", R, G, B, pixel);
+          double noise = ((x + y) % 2) ? 0.03 : -0.03;
+          double bg_intensity = total_intensity + noise;
+
+          int BR = (int)(R * bg_intensity * 0.3);
+          int BG = (int)(G * bg_intensity * 0.3);
+          int BB = (int)(B * bg_intensity * 0.3);
+
+          if (BR > 255) BR = 255;
+          if (BR < 0) BR = 0;
+          if (BG > 255) BG = 255;
+          if (BG < 0) BG = 0;
+          if (BB > 255) BB = 255;
+          if (BB < 0) BB = 0;
+
+          ptr += sprintf(ptr,
+            "\x1b[48;2;%d;%d;%dm\x1b[38;2;%d;%d;%dm%c",
+            BR, BG, BB, R, G, B, pixel);
         }
       }
-      fflush(stdout);
+      write(STDOUT_FILENO, framebuffer, ptr - framebuffer);
       render = false;
     }
 
@@ -273,5 +297,6 @@ int main(void) {
     }
   }
   printf("\x1b[2J\x1b[H\x1b[0m");
+  free(framebuffer);
   return 0;
 }
