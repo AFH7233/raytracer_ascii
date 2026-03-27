@@ -84,7 +84,7 @@ void enableRawMode(void) {
 
 int main(void) {
   enableRawMode();
-  int H, W;
+  int H = 24, W = 80;
   struct winsize w;
   bool exit = false;
 
@@ -109,7 +109,7 @@ int main(void) {
   size_t fb_size = 0;
 
   while (!exit) {
-    fb_size = H * W * 32;
+    fb_size = H * W * 64;
     framebuffer = realloc(framebuffer, fb_size);
     char *ptr = framebuffer;
 
